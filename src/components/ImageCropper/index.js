@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { crop } from "../utils";
+import { crop } from "./utils";
 
 const initialImageSource =
   "https://images.unsplash.com/photo-1572107998877-0f1749cf787b?ixlib=rb-1.2.1&q=85&fm=jpg&crop=entropy&cs=srgb&ixid=eyJhcHBfaWQiOjE0NTg5fQ&w=400";
@@ -32,16 +32,20 @@ const ImageCropper = () => {
     const rect = figureContainerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+    const maxWidthHeight = {
+      width: x < 0 ? 0 : x <= sourceImgRef.current.naturalWidth ? x : sourceImgRef.current.naturalWidth,
+      height: y < 0 ? 0 : y <= sourceImgRef.current.naturalHeight ? y : sourceImgRef.current.naturalHeight,
+    };
     let newImageDimention;
     switch (mouseMoveAxis) {
       case "x":
-        newImageDimention = { ...imageDimention, width: x };
+        newImageDimention = { ...imageDimention, width: maxWidthHeight.width };
         break;
       case "y":
-        newImageDimention = { ...imageDimention, height: y };
+        newImageDimention = { ...imageDimention, height: maxWidthHeight.height };
         break;
       case "xy":
-        newImageDimention = { ...imageDimention, width: x, height: y };
+        newImageDimention = { ...imageDimention, width: maxWidthHeight.width, height: maxWidthHeight.height };
         break;
       default:
         newImageDimention = { ...imageDimention };
@@ -61,15 +65,13 @@ const ImageCropper = () => {
     setMouseMoveAxis(null);
   };
 
-  useEffect(() => {
-    setTimeout(() => {
-      setImageDimention({
-        ...imageDimention,
-        width: sourceImgRef.current.naturalWidth,
-        height: sourceImgRef.current.naturalHeight,
-      });
-    }, 100);
-  }, []);
+  const handleOnLoad = () => {
+    setImageDimention({
+      ...imageDimention,
+      width: sourceImgRef.current.naturalWidth,
+      height: sourceImgRef.current.naturalHeight,
+    });
+  };
 
   useEffect(() => {
     if (pressing) {
@@ -94,9 +96,9 @@ const ImageCropper = () => {
         </button>
       </div>
 
-      <div className="image-container" style={{ position: "relative" }}>
+      <div className="image-container" style={{ position: "relative", margin: 100 }}>
         <figure style={{ margin: 0, pointerEvents: "none" }}>
-          <img id="img" src={imageSource} alt="..." ref={sourceImgRef}></img>
+          <img id="img" src={imageSource} alt="..." ref={sourceImgRef} onLoad={handleOnLoad}></img>
         </figure>
         <div
           style={{
