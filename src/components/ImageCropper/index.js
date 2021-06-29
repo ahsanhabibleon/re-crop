@@ -49,12 +49,13 @@ const ImageCropper = () => {
         newImageDimention = { ...imageDimention, width: maxWidthHeight.width, height: maxWidthHeight.height };
         break;
       case "-x":
-        newImageDimention = { ...imageDimention, x: maxWidthHeight.width, width: rect.width - maxWidthHeight.width };
+        newImageDimention = { ...imageDimention, width: rect.width - x };
         break;
       default:
         newImageDimention = { ...imageDimention };
     }
     setImageDimention(newImageDimention);
+    console.log(e.clientX, rect);
   };
 
   const handleMouseDown = (param) => () => {
@@ -77,6 +78,17 @@ const ImageCropper = () => {
     });
   };
 
+  const handleImageUpload = (e) => {
+    console.log(e);
+    e.preventDefault();
+    const reader = new FileReader();
+    const file = e.target.files[0];
+    reader.onloadend = () => {
+      setImageSource(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   useEffect(() => {
     if (pressing) {
       window.addEventListener("mousemove", handleMouseMove);
@@ -90,6 +102,7 @@ const ImageCropper = () => {
   }, [pressing]);
   return (
     <div>
+      <input type="file" name="" id="" onChange={handleImageUpload} />
       <div style={{ display: "flex", margin: "50px 0 50px" }}>
         <button className="btn" id="btn" onClick={cropImage}>
           Crop image
@@ -120,11 +133,10 @@ const ImageCropper = () => {
             onMouseDown={handleMouseDown("x")}
             style={{
               position: "absolute",
-              top: "calc( 50% - 15px)",
+              top: 0,
               right: -2,
               width: 4,
-              height: 30,
-              background: "aqua",
+              height: "100%",
               cursor: "e-resize",
             }}
           ></span>
@@ -133,11 +145,10 @@ const ImageCropper = () => {
             onMouseDown={handleMouseDown("y")}
             style={{
               position: "absolute",
-              left: "calc( 50% - 15px)",
+              left: 0,
               bottom: -2,
-              width: 30,
+              width: "100%",
               height: 4,
-              background: "aqua",
               cursor: "n-resize",
             }}
           ></span>
@@ -159,11 +170,10 @@ const ImageCropper = () => {
             onMouseDown={handleMouseDown("-x")}
             style={{
               position: "absolute",
-              top: "calc( 50% - 15px)",
+              top: 0,
               left: -2,
               width: 4,
-              height: 30,
-              background: "aqua",
+              height: "100%",
               cursor: "e-resize",
             }}
           ></span>
@@ -172,11 +182,10 @@ const ImageCropper = () => {
             onMouseDown={handleMouseDown("y")}
             style={{
               position: "absolute",
-              left: "calc( 50% - 15px)",
+              left: 0,
               top: -2,
-              width: 30,
+              width: "100%",
               height: 4,
-              background: "aqua",
               cursor: "n-resize",
             }}
           ></span>
