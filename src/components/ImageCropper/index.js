@@ -36,6 +36,7 @@ const ImageCropper = () => {
       width: x < 0 ? 0 : x <= sourceImgRef.current.naturalWidth ? x : sourceImgRef.current.naturalWidth,
       height: y < 0 ? 0 : y <= sourceImgRef.current.naturalHeight ? y : sourceImgRef.current.naturalHeight,
     };
+    console.log("rect", rect.width - maxWidthHeight.width);
     let newImageDimention;
     switch (mouseMoveAxis) {
       case "x":
@@ -46,6 +47,9 @@ const ImageCropper = () => {
         break;
       case "xy":
         newImageDimention = { ...imageDimention, width: maxWidthHeight.width, height: maxWidthHeight.height };
+        break;
+      case "-x":
+        newImageDimention = { ...imageDimention, x: maxWidthHeight.width, width: rect.width - maxWidthHeight.width };
         break;
       default:
         newImageDimention = { ...imageDimention };
@@ -106,8 +110,8 @@ const ImageCropper = () => {
             width: imageDimention.width,
             height: imageDimention.height,
             position: "absolute",
-            left: 0,
-            top: 0,
+            left: imageDimention.x,
+            top: imageDimention.y,
           }}
           ref={figureContainerRef}
         >
@@ -144,6 +148,45 @@ const ImageCropper = () => {
               position: "absolute",
               right: 0,
               bottom: 0,
+              width: 10,
+              height: 10,
+              background: "aqua",
+              cursor: "nw-resize",
+            }}
+          ></span>
+          <span
+            className="handle-right"
+            onMouseDown={handleMouseDown("-x")}
+            style={{
+              position: "absolute",
+              top: "calc( 50% - 15px)",
+              left: -2,
+              width: 4,
+              height: 30,
+              background: "aqua",
+              cursor: "e-resize",
+            }}
+          ></span>
+          <span
+            className="handle-bottom"
+            onMouseDown={handleMouseDown("y")}
+            style={{
+              position: "absolute",
+              left: "calc( 50% - 15px)",
+              top: -2,
+              width: 30,
+              height: 4,
+              background: "aqua",
+              cursor: "n-resize",
+            }}
+          ></span>
+          <span
+            className="handle-corner"
+            onMouseDown={handleMouseDown("xy")}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
               width: 10,
               height: 10,
               background: "aqua",
