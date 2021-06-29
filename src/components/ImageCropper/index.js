@@ -12,6 +12,13 @@ const ImageCropper = () => {
   const [imageSource, setImageSource] = useState(initialImageSource);
   const [originalImageDimention, setOriginalImageDimention] = useState({});
   const [outputImageDimention, setOutputImageDimention] = useState({ width: 100, height: 100, x: 0, y: 0 });
+  const [pane, setPane] = useState(null);
+
+  useEffect(() => {
+    setPane(figureContainerRef.current);
+
+    animate();
+  }, []);
 
   const handleImageLoad = () => {
     setImageLoaded(true);
@@ -34,7 +41,13 @@ const ImageCropper = () => {
     setImageSource(initialImageSource);
   };
 
+  console.log("ttt", figureContainerRef, figureContainerGhostRef);
   // console.log(sourceImgRef, figureContainerRef);
+
+  /*
+   * @author https://twitter.com/blurspline / https://github.com/zz85
+   * See post @ http://www.lab4games.net/zz85/blog/2014/11/15/resizing-moving-snapping-windows-with-js-css/
+   */
 
   // Minimum resizable area
   var minWidth = 60;
@@ -55,10 +68,6 @@ const ImageCropper = () => {
   var b, x, y;
 
   var redraw = false;
-  // var pane = figureContainerRef.current;
-  var pane = document.getElementById("pane");
-  var ghostpane = document.getElementById("ghostpane");
-  // var ghostpane = figureContainerGhostRef.current;
 
   function setBounds(element, x, y, w, h) {
     element.style.left = x + "px";
@@ -68,25 +77,26 @@ const ImageCropper = () => {
   }
 
   function hintHide() {
-    setBounds(ghostpane, b.left, b.top, b.width, b.height);
-    ghostpane.style.opacity = 0;
+    setBounds(figureContainerGhostRef.current, b.left, b.top, b.width, b.height);
+    figureContainerGhostRef.current.style.opacity = 0;
 
-    // var b = ghostpane.getBoundingClientRect();
-    // ghostpane.style.top = b.top + b.height / 2;
-    // ghostpane.style.left = b.left + b.width / 2;
-    // ghostpane.style.width = 0;
-    // ghostpane.style.height = 0;
+    // var b = figureContainerGhostRef.current.getBoundingClientRect();
+    // figureContainerGhostRef.current.style.top = b.top + b.height / 2;
+    // figureContainerGhostRef.current.style.left = b.left + b.width / 2;
+    // figureContainerGhostRef.current.style.width = 0;
+    // figureContainerGhostRef.current.style.height = 0;
   }
 
+  setTimeout(() => {}, 1000);
   // Mouse events
   // pane.addEventListener("mousedown", onMouseDown);
-  window.addEventListener("mousemove", onMove);
-  window.addEventListener("mouseup", onUp);
+  document.addEventListener("mousemove", onMove);
+  document.addEventListener("mouseup", onUp);
 
   // Touch events
   // pane.addEventListener("touchstart", onTouchDown);
-  window.addEventListener("touchmove", onTouchMove);
-  window.addEventListener("touchend", onTouchEnd);
+  document.addEventListener("touchmove", onTouchMove);
+  document.addEventListener("touchend", onTouchEnd);
 
   function onTouchDown(e) {
     onDown(e.touches[0]);
@@ -98,7 +108,7 @@ const ImageCropper = () => {
   }
 
   function onTouchEnd(e) {
-    if (e.touches.length === 0) onUp(e.changedTouches[0]);
+    if (e.touches.length == 0) onUp(e.changedTouches[0]);
   }
 
   function onMouseDown(e) {
@@ -132,6 +142,7 @@ const ImageCropper = () => {
   }
 
   function calc(e) {
+    // console.log(figureContainerRef);
     b = originalImageDimention;
     x = e.clientX - b.left;
     y = e.clientY - b.top;
@@ -156,6 +167,7 @@ const ImageCropper = () => {
   }
 
   function animate() {
+    // console.log("pane", pane);
     requestAnimationFrame(animate);
 
     if (!redraw) return;
@@ -195,24 +207,24 @@ const ImageCropper = () => {
         b.bottom > window.innerHeight - FULLSCREEN_MARGINS
       ) {
         // hintFull();
-        setBounds(ghostpane, 0, 0, window.innerWidth, window.innerHeight);
-        ghostpane.style.opacity = 0.2;
+        setBounds(figureContainerGhostRef.current, 0, 0, window.innerWidth, window.innerHeight);
+        figureContainerGhostRef.current.style.opacity = 0.2;
       } else if (b.top < MARGINS) {
         // hintTop();
-        setBounds(ghostpane, 0, 0, window.innerWidth, window.innerHeight / 2);
-        ghostpane.style.opacity = 0.2;
+        setBounds(figureContainerGhostRef.current, 0, 0, window.innerWidth, window.innerHeight / 2);
+        figureContainerGhostRef.current.style.opacity = 0.2;
       } else if (b.left < MARGINS) {
         // hintLeft();
-        setBounds(ghostpane, 0, 0, window.innerWidth / 2, window.innerHeight);
-        ghostpane.style.opacity = 0.2;
+        setBounds(figureContainerGhostRef.current, 0, 0, window.innerWidth / 2, window.innerHeight);
+        figureContainerGhostRef.current.style.opacity = 0.2;
       } else if (b.right > rightScreenEdge) {
         // hintRight();
-        setBounds(ghostpane, window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight);
-        ghostpane.style.opacity = 0.2;
+        setBounds(figureContainerGhostRef.current, window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight);
+        figureContainerGhostRef.current.style.opacity = 0.2;
       } else if (b.bottom > bottomScreenEdge) {
         // hintBottom();
-        setBounds(ghostpane, 0, window.innerHeight / 2, window.innerWidth, window.innerWidth / 2);
-        ghostpane.style.opacity = 0.2;
+        setBounds(figureContainerGhostRef.current, 0, window.innerHeight / 2, window.innerWidth, window.innerWidth / 2);
+        figureContainerGhostRef.current.style.opacity = 0.2;
       } else {
         hintHide();
       }
@@ -236,28 +248,22 @@ const ImageCropper = () => {
     }
 
     // This code executes when mouse moves without clicking
-    // console.log(pane, ghostpane);
 
     // style cursor
-
-    if (imageLoaded) {
-      if ((onRightEdge && onBottomEdge) || (onLeftEdge && onTopEdge)) {
-        pane.style.cursor = "nwse-resize";
-      } else if ((onRightEdge && onTopEdge) || (onBottomEdge && onLeftEdge)) {
-        pane.style.cursor = "nesw-resize";
-      } else if (onRightEdge || onLeftEdge) {
-        pane.style.cursor = "ew-resize";
-      } else if (onBottomEdge || onTopEdge) {
-        pane.style.cursor = "ns-resize";
-      } else if (canMove()) {
-        pane.style.cursor = "move";
-      } else {
-        pane.style.cursor = "default";
-      }
+    if ((onRightEdge && onBottomEdge) || (onLeftEdge && onTopEdge)) {
+      pane.style.cursor = "nwse-resize";
+    } else if ((onRightEdge && onTopEdge) || (onBottomEdge && onLeftEdge)) {
+      pane.style.cursor = "nesw-resize";
+    } else if (onRightEdge || onLeftEdge) {
+      pane.style.cursor = "ew-resize";
+    } else if (onBottomEdge || onTopEdge) {
+      pane.style.cursor = "ns-resize";
+    } else if (canMove()) {
+      pane.style.cursor = "move";
+    } else {
+      pane.style.cursor = "default";
     }
   }
-
-  animate();
 
   function onUp(e) {
     calc(e);
@@ -306,6 +312,10 @@ const ImageCropper = () => {
 
   return (
     <div>
+      {/* <div id="pane" onMouseDown={onMouseDown} ref={figureContainerRef} onTouchStart={onTouchDown}>
+        <div id="title">Resize, Drag or Snap Me!</div>
+      </div>
+      <div id="ghostpane" ref={figureContainerGhostRef}></div> */}
       <div style={{ display: "flex", margin: "50px 0 50px" }}>
         <button className="btn" id="btn" onClick={cropImage}>
           Crop image
@@ -317,34 +327,36 @@ const ImageCropper = () => {
       </div>
 
       <div className="image-container" style={{ position: "relative", margin: 100 }}>
-        <figure style={{ margin: 0, pointerEvents: "none" }} onMouseDown={onMouseDown} onTouchStart={onTouchDown}>
+        <figure style={{ margin: 0, pointerEvents: "none" }}>
           <img id="img" src={imageSource} alt="..." ref={sourceImgRef} onLoad={handleImageLoad} />
         </figure>
-        <div
-          // style={{
-          //   outline: "1px solid aqua",
-          //   width: outputImageDimention.width,
-          //   height: outputImageDimention.height,
-          //   position: "absolute",
-          //   left: outputImageDimention.x,
-          //   top: outputImageDimention.y,
-          // }}
-          ref={figureContainerRef}
-          id="pane"
-        ></div>
-        <div
-          // style={{
-          //   outline: "1px solid aqua",
-          //   width: outputImageDimention.width,
-          //   height: outputImageDimention.height,
-          //   position: "absolute",
-          //   left: outputImageDimention.x,
-          //   top: outputImageDimention.y,
-          // }}
-          ref={figureContainerGhostRef}
-          id="ghostpane"
-        ></div>
       </div>
+      <div
+        // style={{
+        //   outline: "1px solid aqua",
+        //   width: outputImageDimention.width,
+        //   height: outputImageDimention.height,
+        //   position: "absolute",
+        //   left: outputImageDimention.x,
+        //   top: outputImageDimention.y,
+        // }}
+        ref={figureContainerRef}
+        id="pane"
+        onMouseDown={onMouseDown}
+        onTouchStart={onTouchDown}
+      ></div>
+      <div
+        // style={{
+        //   outline: "1px solid aqua",
+        //   width: outputImageDimention.width,
+        //   height: outputImageDimention.height,
+        //   position: "absolute",
+        //   left: outputImageDimention.x,
+        //   top: outputImageDimention.y,
+        // }}
+        ref={figureContainerGhostRef}
+        id="ghostpane"
+      ></div>
     </div>
   );
 };
