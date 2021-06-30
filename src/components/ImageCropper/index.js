@@ -58,26 +58,30 @@ const ImageCropper = () => {
           };
 
         case "-x":
-          const _negetiveWidth = sourceImageWidth - (e.pageX - rect.left);
+          // const _negetiveWidth = sourceImageWidth - (e.pageX - sourceImageDimention.left);
+          const _negetiveWidth = rect.right - e.pageX;
           return {
             ...imageDimention,
             width: _negetiveWidth < 0 ? 0 : _negetiveWidth > sourceImageWidth ? sourceImageWidth : _negetiveWidth,
-            x: e.pageX - rect.left,
+            x: e.pageX - sourceImageDimention.x,
           };
         case "-y":
-          const _negetiveHeight = sourceImageHeight - (e.pageY - rect.top);
+          const _negetiveHeight = rect.bottom - e.pageY;
           return {
             ...imageDimention,
             height: _negetiveHeight < 0 ? 0 : _negetiveHeight > sourceImageHeight ? sourceImageHeight : _negetiveHeight,
+            y: e.pageY - sourceImageDimention.y,
           };
 
         case "-xy":
-          const _negetiveW = sourceImageWidth - (e.pageX - rect.left),
-            _negentiveH = sourceImageHeight - (e.pageY - rect.top);
+          const _negetiveW = rect.right - e.pageX,
+            _negentiveH = rect.bottom - e.pageY;
           return {
             ...imageDimention,
             width: _negetiveW < 0 ? 0 : _negetiveW > sourceImageWidth ? sourceImageWidth : _negetiveW,
             height: _negentiveH < 0 ? 0 : _negentiveH > sourceImageHeight ? sourceImageHeight : _negentiveH,
+            x: e.pageX - sourceImageDimention.x,
+            y: e.pageY - sourceImageDimention.y,
           };
 
         default:
