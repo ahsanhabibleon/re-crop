@@ -15,7 +15,7 @@ export const crop = (url, outputWidth = 100, outputHeight = 100, outputX = 0, ou
 
       // draw our image at position 0, 0 on the canvas
       const ctx = outputImage.getContext("2d");
-      ctx.drawImage(inputImage, outputX, outputY);
+      ctx.drawImage(inputImage, -outputX, -outputY);
 
       //convert the canvas to image
       const imgUrl = outputImage.toDataURL("image/png");

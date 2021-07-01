@@ -19,9 +19,17 @@ const ImageCropper = () => {
       y = imageDimention.y,
       w = imageDimention.width,
       h = imageDimention.height;
-    crop(imageSource, w, h, x, y).then((img) => {
-      setImageSource(img.src);
-    });
+    crop(imageSource, w, h, x, y)
+      .then((img) => {
+        setImageSource(img.src);
+      })
+      .then(() => {
+        setImageDimention({
+          ...imageDimention,
+          x: 0,
+          y: 0,
+        });
+      });
   };
 
   const undo = () => {
@@ -59,29 +67,49 @@ const ImageCropper = () => {
 
         case "-x":
           // const _negetiveWidth = sourceImageWidth - (e.pageX - sourceImageDimention.left);
-          const _negetiveWidth = rect.right - e.pageX;
+          const _negetiveWidth = rect.right - e.pageX,
+            negetiveX = e.pageX - sourceImageDimention.x;
           return {
             ...imageDimention,
             width: _negetiveWidth < 0 ? 0 : _negetiveWidth > sourceImageWidth ? sourceImageWidth : _negetiveWidth,
-            x: e.pageX - sourceImageDimention.x,
+            x: negetiveX < 0 ? 0 : negetiveX > sourceImageWidth ? sourceImageWidth : negetiveX,
           };
         case "-y":
-          const _negetiveHeight = rect.bottom - e.pageY;
+          const _negetiveHeight = rect.bottom - e.pageY,
+            negetiveY = e.pageY - sourceImageDimention.y;
           return {
             ...imageDimention,
             height: _negetiveHeight < 0 ? 0 : _negetiveHeight > sourceImageHeight ? sourceImageHeight : _negetiveHeight,
-            y: e.pageY - sourceImageDimention.y,
+            y: negetiveY < 0 ? 0 : negetiveY > sourceImageHeight ? sourceImageHeight : negetiveY,
           };
 
         case "-xy":
           const _negetiveW = rect.right - e.pageX,
-            _negentiveH = rect.bottom - e.pageY;
+            _negentiveH = rect.bottom - e.pageY,
+            _negetiveX = e.pageX - sourceImageDimention.x,
+            _negetiveY = e.pageY - sourceImageDimention.y;
           return {
             ...imageDimention,
             width: _negetiveW < 0 ? 0 : _negetiveW > sourceImageWidth ? sourceImageWidth : _negetiveW,
             height: _negentiveH < 0 ? 0 : _negentiveH > sourceImageHeight ? sourceImageHeight : _negentiveH,
-            x: e.pageX - sourceImageDimention.x,
-            y: e.pageY - sourceImageDimention.y,
+            x: _negetiveX < 0 ? 0 : _negetiveX > sourceImageWidth ? sourceImageWidth : _negetiveX,
+            y: _negetiveY < 0 ? 0 : _negetiveY > sourceImageHeight ? sourceImageHeight : _negetiveY,
+          };
+
+        case "rect":
+          if (
+            imageDimention.left <= sourceImageDimention.left ||
+            imageDimention.top <= sourceImageDimention.top ||
+            imageDimention.right >= sourceImageDimention.right ||
+            imageDimention.bottom >= sourceImageDimention.bottom
+          )
+            return { ...imageDimention };
+          const rectX = e.pageX - sourceImageDimention.x,
+            rectY = e.pageY - sourceImageDimention.y;
+          return {
+            ...imageDimention,
+            x: rectX < 0 ? 0 : rectX > sourceImageWidth ? sourceImageWidth : rectX,
+            y: rectY < 0 ? 0 : rectY > sourceImageHeight ? sourceImageHeight : rectY,
           };
 
         default:
@@ -165,6 +193,18 @@ const ImageCropper = () => {
           }}
           ref={figureContainerRef}
         >
+          <span
+            className="move-rect"
+            onMouseDown={handleMouseDown("rect")}
+            style={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              bottom: 10,
+              left: 10,
+              cursor: "move",
+            }}
+          ></span>
           <span
             className="handle-right"
             onMouseDown={handleMouseDown("x")}
