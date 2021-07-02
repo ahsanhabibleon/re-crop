@@ -1,115 +1,129 @@
-import { useState, useRef, useEffect } from "react";
-import { crop } from "./utils";
+import React, { useState, useRef, useEffect } from "react";
 
-const initialImageSource =
-  "https://images.unsplash.com/photo-1572107998877-0f1749cf787b?ixlib=rb-1.2.1&q=85&fm=jpg&crop=entropy&cs=srgb&ixid=eyJhcHBfaWQiOjE0NTg5fQ&w=400";
-
-const ImageCropper = () => {
+const ImageCropper = ({ imgAlt, imageSource, imageDimention, updateImageDimention, imgStyles }) => {
   const sourceImgRef = useRef(null);
   const figureContainerRef = useRef(null);
-  const [imageSource, setImageSource] = useState(initialImageSource);
   const [sourceImageDimention, setSourceImageDimention] = useState({ width: 100, height: 100, x: 0, y: 0 });
-  const [imageDimention, setImageDimention] = useState({ width: 100, height: 100, x: 0, y: 0 });
   const [pressing, setPressing] = useState(false);
   const [mouseMoveAxis, setMouseMoveAxis] = useState(null);
+  const [rectOffset, setRectOffset] = useState({ left: 0, top: 0 });
 
-  const cropImage = () => {
-    //crop(imageSource, outputWidth, outputHeight, cropStartXAxis, cropStartYAxis).then((img)) { do something...})
-    const x = imageDimention.x,
-      y = imageDimention.y,
-      w = imageDimention.width,
-      h = imageDimention.height;
-    crop(imageSource, w, h, x, y)
-      .then((img) => {
-        setImageSource(img.src);
-      })
-      .then(() => {
-        setImageDimention({
-          ...imageDimention,
-          x: 0,
-          y: 0,
-        });
-      });
-  };
+  // console.log(imageDimention, sourceImageDimention);
 
-  const undo = () => {
-    setImageSource(initialImageSource);
+  const applicableDimention = (sourceValue, value) => {
+    if (value < 0) {
+      return 0;
+    }
+    if (value > sourceValue) {
+      return sourceValue;
+    }
+    return value;
   };
 
   const handleMouseMove = (e) => {
     const rect = figureContainerRef.current.getBoundingClientRect();
-    const sourceImageWidth = sourceImageDimention.width,
-      sourceImageHeight = sourceImageDimention.height;
+    const sourceImageWidth = sourceImageDimention.width;
+    const sourceImageHeight = sourceImageDimention.height;
     const getNewImageDimention = (_case) => {
+      let width;
+      let height;
+      const left = applicableDimention(sourceImageWidth, e.pageX - sourceImageDimention.x);
+      const top = applicableDimention(sourceImageHeight, e.pageY - sourceImageDimention.y);
+
+      if (_case === "right" || _case === "top-right" || _case === "bottom-right") {
+        width = applicableDimention(sourceImageWidth, e.pageX - rect.left);
+      }
+      if (_case === "bottom" || _case === "bottom-right" || _case === "bottom-left") {
+        height = applicableDimention(sourceImageHeight, e.pageY - rect.top);
+      }
+      if (_case === "top" || _case === "top-right" || _case === "top-left") {
+        height = applicableDimention(sourceImageHeight, rect.bottom - e.pageY);
+      }
+      if (_case === "left" || _case === "bottom-left" || _case === "top-left") {
+        width = applicableDimention(sourceImageWidth, rect.right - e.pageX);
+      }
+
       switch (_case) {
-        case "x":
-          const _width = e.pageX - rect.left;
+        case "right":
           return {
             ...imageDimention,
-            width: _width < 0 ? 0 : _width > sourceImageWidth ? sourceImageWidth : _width,
+            width,
           };
 
-        case "y":
-          const _height = e.pageY - rect.top;
+        case "bottom":
           return {
             ...imageDimention,
-            height: _height < 0 ? 0 : _height > sourceImageHeight ? sourceImageHeight : _height,
+            height,
           };
 
-        case "xy":
-          const _w = e.pageX - rect.left,
-            _h = e.pageY - rect.top;
+        case "left":
           return {
             ...imageDimention,
-            width: _w < 0 ? 0 : _w > sourceImageWidth ? sourceImageWidth : _w,
-            height: _h < 0 ? 0 : _h > sourceImageHeight ? sourceImageHeight : _h,
+            width,
+            x: left,
+          };
+        case "top":
+          return {
+            ...imageDimention,
+            height,
+            y: top,
           };
 
-        case "-x":
-          // const _negetiveWidth = sourceImageWidth - (e.pageX - sourceImageDimention.left);
-          const _negetiveWidth = rect.right - e.pageX,
-            negetiveX = e.pageX - sourceImageDimention.x;
+        case "top-left":
           return {
             ...imageDimention,
-            width: _negetiveWidth < 0 ? 0 : _negetiveWidth > sourceImageWidth ? sourceImageWidth : _negetiveWidth,
-            x: negetiveX < 0 ? 0 : negetiveX > sourceImageWidth ? sourceImageWidth : negetiveX,
-          };
-        case "-y":
-          const _negetiveHeight = rect.bottom - e.pageY,
-            negetiveY = e.pageY - sourceImageDimention.y;
-          return {
-            ...imageDimention,
-            height: _negetiveHeight < 0 ? 0 : _negetiveHeight > sourceImageHeight ? sourceImageHeight : _negetiveHeight,
-            y: negetiveY < 0 ? 0 : negetiveY > sourceImageHeight ? sourceImageHeight : negetiveY,
+            width,
+            height,
+            x: left,
+            y: top,
           };
 
-        case "-xy":
-          const _negetiveW = rect.right - e.pageX,
-            _negentiveH = rect.bottom - e.pageY,
-            _negetiveX = e.pageX - sourceImageDimention.x,
-            _negetiveY = e.pageY - sourceImageDimention.y;
+        case "top-right":
           return {
             ...imageDimention,
-            width: _negetiveW < 0 ? 0 : _negetiveW > sourceImageWidth ? sourceImageWidth : _negetiveW,
-            height: _negentiveH < 0 ? 0 : _negentiveH > sourceImageHeight ? sourceImageHeight : _negentiveH,
-            x: _negetiveX < 0 ? 0 : _negetiveX > sourceImageWidth ? sourceImageWidth : _negetiveX,
-            y: _negetiveY < 0 ? 0 : _negetiveY > sourceImageHeight ? sourceImageHeight : _negetiveY,
+            width,
+            height,
+            y: top,
+          };
+
+        case "bottom-left":
+          return {
+            ...imageDimention,
+            width,
+            height,
+            x: left,
+          };
+
+        case "bottom-right":
+          return {
+            ...imageDimention,
+            width,
+            height,
           };
 
         case "rect":
-          if (
-            imageDimention.left <= sourceImageDimention.left ||
-            imageDimention.top <= sourceImageDimention.top ||
-            imageDimention.right >= sourceImageDimention.right ||
-            imageDimention.bottom >= sourceImageDimention.bottom
-          )
-            return { ...imageDimention };
-          const rectX = e.pageX - sourceImageDimention.x,
-            rectY = e.pageY - sourceImageDimention.y;
+          let rectLeft, rectTop;
+
+          if (e.clientX + rectOffset.left <= 0) {
+            rectLeft = 0;
+          } else if (e.clientX + rectOffset.left + imageDimention.width >= sourceImageDimention.width) {
+            rectLeft = sourceImageDimention.width - imageDimention.width;
+          } else {
+            rectLeft = e.clientX + rectOffset.left;
+          }
+
+          if (e.clientY + rectOffset.top <= 0) {
+            rectTop = 0;
+          } else if (e.clientY + rectOffset.top + imageDimention.height >= sourceImageDimention.height) {
+            rectTop = sourceImageDimention.height - imageDimention.height;
+          } else {
+            rectTop = e.clientY + rectOffset.top;
+          }
+
           return {
             ...imageDimention,
-            x: rectX < 0 ? 0 : rectX > sourceImageWidth ? sourceImageWidth : rectX,
-            y: rectY < 0 ? 0 : rectY > sourceImageHeight ? sourceImageHeight : rectY,
+            x: rectLeft,
+            y: rectTop,
           };
 
         default:
@@ -117,14 +131,16 @@ const ImageCropper = () => {
       }
     };
 
-    setImageDimention(getNewImageDimention(mouseMoveAxis));
-    console.log(e.clientX, rect);
+    updateImageDimention(getNewImageDimention(mouseMoveAxis));
   };
 
-  const handleMouseDown = (param) => () => {
-    console.log("mouse is down", param);
+  const handleMouseDown = (param) => (e) => {
     setPressing(true);
     setMouseMoveAxis(param);
+    setRectOffset({
+      left: imageDimention.x - e.clientX,
+      top: imageDimention.y - e.clientY,
+    });
   };
 
   const handleMouseUp = () => {
@@ -136,22 +152,11 @@ const ImageCropper = () => {
   const handleOnLoad = () => {
     const rect = sourceImgRef.current.getBoundingClientRect();
     setSourceImageDimention(rect);
-    setImageDimention({
+    updateImageDimention({
       ...imageDimention,
       width: rect.width,
       height: rect.height,
     });
-  };
-
-  const handleImageUpload = (e) => {
-    console.log(e);
-    e.preventDefault();
-    const reader = new FileReader();
-    const file = e.target.files[0];
-    reader.onloadend = () => {
-      setImageSource(reader.result);
-    };
-    reader.readAsDataURL(file);
   };
 
   useEffect(() => {
@@ -167,20 +172,9 @@ const ImageCropper = () => {
   }, [pressing]);
   return (
     <div>
-      <input type="file" name="" id="" onChange={handleImageUpload} />
-      <div style={{ display: "flex", margin: "50px 0 50px" }}>
-        <button className="btn" id="btn" onClick={cropImage}>
-          Crop image
-        </button>
-
-        <button className="btn" id="btn" onClick={undo}>
-          Undo
-        </button>
-      </div>
-
-      <div className="image-container" style={{ position: "relative", margin: 100 }}>
+      <div className="image-container" style={{ position: "relative" }}>
         <figure style={{ margin: 0, pointerEvents: "none" }}>
-          <img id="img" src={imageSource} alt="..." ref={sourceImgRef} onLoad={handleOnLoad}></img>
+          <img id="img" src={imageSource} alt={imgAlt} ref={sourceImgRef} onLoad={handleOnLoad} style={imgStyles} />
         </figure>
         <div
           style={{
@@ -204,10 +198,10 @@ const ImageCropper = () => {
               left: 10,
               cursor: "move",
             }}
-          ></span>
+          />
           <span
             className="handle-right"
-            onMouseDown={handleMouseDown("x")}
+            onMouseDown={handleMouseDown("right")}
             style={{
               position: "absolute",
               top: 0,
@@ -216,10 +210,10 @@ const ImageCropper = () => {
               height: "100%",
               cursor: "e-resize",
             }}
-          ></span>
+          />
           <span
             className="handle-bottom"
-            onMouseDown={handleMouseDown("y")}
+            onMouseDown={handleMouseDown("bottom")}
             style={{
               position: "absolute",
               left: 0,
@@ -228,23 +222,24 @@ const ImageCropper = () => {
               height: 4,
               cursor: "n-resize",
             }}
-          ></span>
+          />
           <span
             className="handle-corner"
-            onMouseDown={handleMouseDown("xy")}
+            onMouseDown={handleMouseDown("bottom-right")}
             style={{
               position: "absolute",
               right: 0,
               bottom: 0,
               width: 10,
               height: 10,
-              background: "aqua",
+              border: "3px solid",
+              borderColor: "transparent aqua aqua transparent",
               cursor: "nw-resize",
             }}
-          ></span>
+          />
           <span
             className="handle-right"
-            onMouseDown={handleMouseDown("-x")}
+            onMouseDown={handleMouseDown("left")}
             style={{
               position: "absolute",
               top: 0,
@@ -253,10 +248,10 @@ const ImageCropper = () => {
               height: "100%",
               cursor: "e-resize",
             }}
-          ></span>
+          />
           <span
             className="handle-bottom"
-            onMouseDown={handleMouseDown("-y")}
+            onMouseDown={handleMouseDown("top")}
             style={{
               position: "absolute",
               left: 0,
@@ -265,20 +260,49 @@ const ImageCropper = () => {
               height: 4,
               cursor: "n-resize",
             }}
-          ></span>
+          />
           <span
             className="handle-corner"
-            onMouseDown={handleMouseDown("-xy")}
+            onMouseDown={handleMouseDown("top-left")}
             style={{
               position: "absolute",
               top: 0,
               left: 0,
               width: 10,
               height: 10,
-              background: "aqua",
+              border: "3px solid",
+              borderColor: "aqua transparent transparent aqua",
               cursor: "nw-resize",
             }}
-          ></span>
+          />
+          <span
+            className="handle-corner"
+            onMouseDown={handleMouseDown("top-right")}
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              width: 10,
+              height: 10,
+              border: "3px solid",
+              borderColor: "aqua aqua transparent transparent",
+              cursor: "ne-resize",
+            }}
+          />
+          <span
+            className="handle-corner"
+            onMouseDown={handleMouseDown("bottom-left")}
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              width: 10,
+              height: 10,
+              border: "3px solid",
+              borderColor: "transparent transparent aqua aqua",
+              cursor: "ne-resize",
+            }}
+          />
         </div>
       </div>
     </div>
